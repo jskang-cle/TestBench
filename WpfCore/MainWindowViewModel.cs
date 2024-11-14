@@ -52,56 +52,56 @@ public partial class MainWindowViewModel : ObservableObject
         PointGeometry = LoadCoPick3DFile("Assets/0012_IMG_Texture_8Bit.png");
     }
 
-    private static PointGeometry3D LoadPlyFile(string plyFilePath)
-    {
-        using Stream f = File.OpenRead(plyFilePath);
-        using StreamReader sr = new StreamReader(f);
+    //private static PointGeometry3D LoadPlyFile(string plyFilePath)
+    //{
+    //    using Stream f = File.OpenRead(plyFilePath);
+    //    using StreamReader sr = new StreamReader(f);
 
-        int vertexCount = 0;
+    //    int vertexCount = 0;
 
-        string? line;
-        while ((line = sr.ReadLine()) != null)
-        {
-            if (line == "end_header")
-            {
-                break;
-            }
+    //    string? line;
+    //    while ((line = sr.ReadLine()) != null)
+    //    {
+    //        if (line == "end_header")
+    //        {
+    //            break;
+    //        }
 
-            if (line.StartsWith("element vertex"))
-            {
-                vertexCount = int.Parse(line[15..]);
-            }
-        }
+    //        if (line.StartsWith("element vertex"))
+    //        {
+    //            vertexCount = int.Parse(line[15..]);
+    //        }
+    //    }
 
-        var vertices = new SharpDX.Vector3[vertexCount];
-        var colors = new SharpDX.Color4[vertexCount];
+    //    var vertices = new SharpDX.Vector3[vertexCount];
+    //    var colors = new SharpDX.Color4[vertexCount];
 
-        int vertexIndex = 0;
-        while ((line = sr.ReadLine()) != null)
-        {
-            var parts = line.Split(' ').ToList();
+    //    int vertexIndex = 0;
+    //    while ((line = sr.ReadLine()) != null)
+    //    {
+    //        var parts = line.Split(' ').ToList();
 
-            if (parts.Count >= 3)
-            {
-                var coords = parts.Take(3).Select(float.Parse).ToList();
-                vertices[vertexIndex] = new SharpDX.Vector3(coords[0], coords[1], coords[2]);
-            }
+    //        if (parts.Count >= 3)
+    //        {
+    //            var coords = parts.Take(3).Select(float.Parse).ToList();
+    //            vertices[vertexIndex] = new SharpDX.Vector3(coords[0], coords[1], coords[2]);
+    //        }
 
-            if (parts.Count >= 9)
-            {
-                var channels = parts[6..9].Select(int.Parse).ToList();
-                colors[vertexIndex] = new SharpDX.Color4(channels[0] / 255f, channels[1] / 255f, channels[2] / 255f, 1.0f);
-            }
+    //        if (parts.Count >= 9)
+    //        {
+    //            var channels = parts[6..9].Select(int.Parse).ToList();
+    //            colors[vertexIndex] = new SharpDX.Color4(channels[0] / 255f, channels[1] / 255f, channels[2] / 255f, 1.0f);
+    //        }
 
-            vertexIndex++;
-        }
+    //        vertexIndex++;
+    //    }
 
-        return new PointGeometry3D()
-        {
-            Positions = new Vector3Collection(vertices),
-            Colors = new Color4Collection(colors),
-        };
-    }
+    //    return new PointGeometry3D()
+    //    {
+    //        Positions = new Vector3Collection(vertices),
+    //        Colors = new Color4Collection(colors),
+    //    };
+    //}
 
     private static PointGeometry3D LoadCoPick3DFile(string filePath)
     {
@@ -158,33 +158,13 @@ public partial class MainWindowViewModel : ObservableObject
 
         string extension = Path.GetExtension(filePath).ToLower();
 
-        BitmapDecoder decoder;
-
-        if (extension == ".tif" || extension == ".tiff")
-        {
-            decoder = new TiffBitmapDecoder(factory);
-        }
-        else if (extension == ".png")
-        {
-            decoder = new PngBitmapDecoder(factory);
-        }
-        else if (extension == ".jpg" || extension == ".jpeg")
-        {
-            decoder = new JpegBitmapDecoder(factory);
-        }
-        else
-        {
-            throw new NotSupportedException("Only TIFF, PNG, and JPEG formats are supported.");
-        }
+        using BitmapDecoder decoder = new TiffBitmapDecoder(factory);
 
         using var decoderUsing = decoder;
         decoder.Initialize(stream, DecodeOptions.CacheOnDemand);
 
         using var frameDecode = decoder.GetFrame(0);
         Guid pixelFormat = frameDecode.PixelFormat;
-        int bpp = PixelFormat.GetBitsPerPixel(pixelFormat);
-        int stride = PixelFormat.GetStride(pixelFormat, frameDecode.Size.Width);
-
         float[] data = new float[frameDecode.Size.Width * frameDecode.Size.Height];
 
         frameDecode.CopyPixels(data);
