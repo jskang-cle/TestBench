@@ -6,8 +6,12 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+
+using HelixToolkit.SharpDX.Core;
+using HelixToolkit.Wpf.SharpDX;
 
 namespace WpfCore;
 /// <summary>

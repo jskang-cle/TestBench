@@ -7,6 +7,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
@@ -22,34 +23,19 @@ namespace WpfCore;
 public partial class MainWindowViewModel : ObservableObject
 {
     [ObservableProperty]
-    private string _plyFilePath = @"Assets\scene_0000.ply";
+    private PointNormal[]? _pointNormals;
 
     [ObservableProperty]
-    private PointGeometry3D? _pointGeometry;
-
-    public EffectsManager EffectsManager { get; }
-
-    public Camera Camera { get; }
+    private System.Windows.Media.Color _pointColor;
 
     public MainWindowViewModel()
     {
-        EffectsManager = new DefaultEffectsManager()
-        {
-
-        };
-
-        Camera = new OrthographicCamera()
-        {
-            LookDirection = new System.Windows.Media.Media3D.Vector3D(0, -10, -10),
-            Position = new System.Windows.Media.Media3D.Point3D(0, 10, 10),
-            UpDirection = new System.Windows.Media.Media3D.Vector3D(0, 1, 0),
-            FarPlaneDistance = 5000,
-            NearPlaneDistance = 0.1f
-        };
-
         // PointGeometry = LoadPlyFile(@"Assets\scene_0000.ply");
 
-        PointGeometry = LoadCoPick3DFile("Assets/0012_IMG_Texture_8Bit.png");
+        var result = LoadCoPick3DFile("Assets/0012_IMG_Texture_8Bit.png");
+
+        PointNormals = result.Item1;
+        PointColor = System.Windows.Media.Colors.Red;
     }
 
     //private static PointGeometry3D LoadPlyFile(string plyFilePath)
@@ -103,7 +89,7 @@ public partial class MainWindowViewModel : ObservableObject
     //    };
     //}
 
-    private static PointGeometry3D LoadCoPick3DFile(string filePath)
+    private static (PointNormal[], Vector3[]) LoadCoPick3DFile(string filePath)
     {
         if (!File.Exists(filePath))
         {
@@ -135,20 +121,14 @@ public partial class MainWindowViewModel : ObservableObject
         float[] yData = ReadPointFileData(yFilePath);
         float[] zData = ReadPointFileData(zFilePath);
 
-        Vector3Collection positions = new Vector3Collection(xData.Length);
+        PointNormal[] pointNormals = new PointNormal[xData.Length];
 
         for (int i = 0; i < xData.Length; i++)
         {
-            positions.Add(new Vector3(xData[i], yData[i], zData[i]));
+            pointNormals[i] = new PointNormal(xData[i], yData[i], zData[i], 0, 0, 0);
         }
 
-        Color4Collection colorsCollection = new Color4Collection(colors);
-
-        return new PointGeometry3D()
-        {
-            Positions = positions,
-            Colors = colorsCollection,
-        };
+        return (pointNormals, null);
     }
 
     private static float[] ReadPointFileData(string filePath)

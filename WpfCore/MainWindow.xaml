@@ -5,54 +5,17 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:h="http://helix-toolkit.org/wpf/"
         xmlns:hx="http://helix-toolkit.org/wpf/SharpDX"
-        xmlns:local="clr-namespace:WpfCore" 
+        xmlns:hxcore="clr-namespace:HelixToolkit.SharpDX.Core;assembly=HelixToolkit.SharpDX.Core"
+        xmlns:local="clr-namespace:WpfCore" xmlns:controls="clr-namespace:WpfCore.Controls"
         d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel}"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <hx:Viewport3DX
-            BackgroundColor="#595959"
-            CameraMode="Inspect"
-            CameraRotationMode="Turntable" 
-            ShowCoordinateSystem="True"
-            ShowCameraInfo="True"
-            ShowCameraTarget="True"
-            ShowFrameRate="True"
-            ShowViewCube="True"
-            EnableSwapChainRendering="True"
-            EffectsManager="{Binding EffectsManager}"
-            ZoomRectangleCursor="Arrow"
-            ZoomDistanceLimitNear="1"
-            ZoomDistanceLimitFar="10"
-            IsPanEnabled="False"
-            IsMoveEnabled="False"
-            FXAALevel="Ultra">
-            <hx:Viewport3DX.Camera>
-                <hx:PerspectiveCamera
-                    LookDirection="0,0,-10"
-                    FarPlaneDistance="1000"
-                    FieldOfView="35"
-                    Position="0,0,0">
-                </hx:PerspectiveCamera>
-            </hx:Viewport3DX.Camera>
-            <hx:PointGeometryModel3D Geometry="{Binding PointGeometry}" Color="White" Size="2,2" Figure="Ellipse">
-                <hx:PointGeometryModel3D.Transform>
-                    <Transform3DGroup>
-                        <ScaleTransform3D ScaleX="0.01" ScaleY="0.01" ScaleZ="0.01">
-                        </ScaleTransform3D>
-                        <RotateTransform3D>
-                            <RotateTransform3D.Rotation>
-                                <AxisAngleRotation3D Axis="0,1,0" Angle="180"/>
-                            </RotateTransform3D.Rotation>
-                        </RotateTransform3D>
-                        <RotateTransform3D>
-                            <RotateTransform3D.Rotation>
-                                <AxisAngleRotation3D Axis="0,0,1" Angle="180"/>
-                            </RotateTransform3D.Rotation>
-                        </RotateTransform3D>
-                    </Transform3DGroup>
-                </hx:PointGeometryModel3D.Transform>
-            </hx:PointGeometryModel3D>
-        </hx:Viewport3DX>
-    </Grid>
+    <DockPanel>
+        <StatusBar DockPanel.Dock="Bottom">
+            <StatusBarItem>
+                <TextBlock Text="{Binding StatusText}" />
+            </StatusBarItem>
+        </StatusBar>
+        <controls:PointCloudView x:Name="PointCloudView" PointNormals="{Binding PointNormals}" PointColor="Gray" PointSize="0.8" />
+    </DockPanel>
 </Window>
