@@ -8,27 +8,27 @@
              xmlns:hxcore="clr-namespace:HelixToolkit.SharpDX.Core;assembly=HelixToolkit.SharpDX.Core" xmlns:converters="clr-namespace:WpfCore.Converters"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <hx:Viewport3DX BackgroundColor="#595959"
+    <hx:Viewport3DX x:Name="HelixViewPort"
+                    BackgroundColor="Black"
                     CameraMode="Inspect"
                     CameraRotationMode="Turntable" 
                     ShowCoordinateSystem="True"
-                    ShowCameraInfo="True"
-                    ShowCameraTarget="True"
-                    ShowFrameRate="True"
                     ShowViewCube="True"
+                    ViewCubeSize="1"
                     CoordinateSystemLabelForeground="White"
-                    EnableSwapChainRendering="True"
                     ZoomRectangleCursor="Arrow"
                     ZoomDistanceLimitNear="1"
-                    ZoomDistanceLimitFar="20"
+                    ZoomDistanceLimitFar="2000"
                     IsInertiaEnabled="False"
                     IsPanEnabled="True"
                     IsMoveEnabled="True"
                     UseDefaultGestures="False"
-                    MSAA="Two">
+                    TextBrush="White"
+                    MSAA="Eight">
         <hx:Viewport3DX.InputBindings>
-            <KeyBinding Key="R" Command="hx:ViewportCommands.Reset " />
+            <!--<KeyBinding Key="R" Command="hx:ViewportCommands.Reset " />--> <!-- 이거 Xaml에서 추가하면 오류나서 CodeBehind에서 추가함 -->
             <MouseBinding Gesture="LeftClick" Command="hx:ViewportCommands.Rotate"/>
+            <MouseBinding Gesture="MiddleClick" Command="hx:ViewportCommands.SetTarget"/>
             <MouseBinding Gesture="RightClick" Command="hx:ViewportCommands.Pan"/>
         </hx:Viewport3DX.InputBindings>
         <hx:Viewport3DX.EffectsManager>
@@ -36,36 +36,21 @@
         </hx:Viewport3DX.EffectsManager>
         <hx:Viewport3DX.DefaultCamera>
             <hx:PerspectiveCamera
+                x:Name="DefaultCamera"
                 LookDirection="0,0,-5"
-                FarPlaneDistance="1000"
+                FarPlaneDistance="10000"
                 FieldOfView="45"
                 Position="0,0,-5">
             </hx:PerspectiveCamera>
         </hx:Viewport3DX.DefaultCamera>
-        <hx:AmbientLight3D />
-        <hx:PointGeometryModel3D x:Name="PointGeometryModel" Color="White" Figure="Rect" 
+        <hx:PointGeometryModel3D x:Name="PointGeometryModel" Color="White" Figure="Rect" FixedSize="False"
                                  Size="{Binding RelativeSource={RelativeSource AncestorType=local:PointCloudView}, 
                                         Path=PointSize, 
                                         Converter={converters:DoubleToSizeConverter}}">
             <hx:PointGeometryModel3D.Geometry>
                 <hxcore:PointGeometry3D x:Name="PointGeometry" />
             </hx:PointGeometryModel3D.Geometry>
-            <hx:PointGeometryModel3D.Transform>
-                <Transform3DGroup>
-                    <ScaleTransform3D ScaleX="0.01" ScaleY="0.01" ScaleZ="0.01">
-                    </ScaleTransform3D>
-                    <RotateTransform3D>
-                        <RotateTransform3D.Rotation>
-                            <AxisAngleRotation3D Axis="0,1,0" Angle="180"/>
-                        </RotateTransform3D.Rotation>
-                    </RotateTransform3D>
-                    <RotateTransform3D>
-                        <RotateTransform3D.Rotation>
-                            <AxisAngleRotation3D Axis="0,0,1" Angle="180"/>
-                        </RotateTransform3D.Rotation>
-                    </RotateTransform3D>
-                </Transform3DGroup>
-            </hx:PointGeometryModel3D.Transform>
         </hx:PointGeometryModel3D>
+        <hx:AmbientLight3D />
     </hx:Viewport3DX>
 </UserControl>

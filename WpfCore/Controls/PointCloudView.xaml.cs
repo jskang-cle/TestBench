@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -17,6 +18,8 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 
 using HelixToolkit.SharpDX.Core;
+using HelixToolkit.SharpDX.Core.Cameras;
+using HelixToolkit.Wpf.SharpDX;
 
 using SharpDX;
 
@@ -29,80 +32,9 @@ public partial class PointCloudView : UserControl
     public PointCloudView()
     {
         InitializeComponent();
+
+        HelixViewPort.InputBindings.Add(new KeyBinding() { Command = ViewportCommands.Reset, Key = Key.R });
     }
-
-    #region Dependency Properties
-
-    public Vector3D TargetPoint
-    {
-        get => (Vector3D)GetValue(TargetPointProperty);
-        set => SetValue(TargetPointProperty, value);
-    }
-
-    public static readonly DependencyProperty TargetPointProperty = DependencyProperty.Register(
-        "TargetPoint", typeof(Vector3D), typeof(PointCloudView), new PropertyMetadata(default(Vector3D)));
-
-    public PointNormal[]? PointNormals
-    {
-        get => (PointNormal[])GetValue(PointNormalsProperty);
-        set => SetValue(PointNormalsProperty, value);
-    }
-
-    public static readonly DependencyProperty PointNormalsProperty = DependencyProperty.Register(
-        "PointNormals", typeof(PointNormal[]), typeof(PointCloudView), new PropertyMetadata(default(PointNormal[]), PointDataChanged));
-
-    public Vector3[]? PointColors
-    {
-        get => (Vector3[])GetValue(PointColorsProperty);
-        set => SetValue(PointColorsProperty, value);
-    }
-
-    public static readonly DependencyProperty PointColorsProperty = DependencyProperty.Register(
-        "PointColors", typeof(Vector3[]), typeof(PointCloudView), new PropertyMetadata(default(Vector3[]), PointDataChanged));
-
-    public System.Windows.Media.Color? PointColor
-    {
-        get => (System.Windows.Media.Color?)GetValue(PointColorProperty);
-        set => SetValue(PointColorProperty, value);
-    }
-
-    public static readonly DependencyProperty PointColorProperty = DependencyProperty.Register(
-        "PointColor", typeof(System.Windows.Media.Color?), typeof(PointCloudView), new PropertyMetadata(default(System.Windows.Media.Color?), PointColorChanged));
-
-    public double PointSize
-    {
-        get => (double)GetValue(PointSizeProperty);
-        set => SetValue(PointSizeProperty, value);
-    }
-
-    public static readonly DependencyProperty PointSizeProperty = DependencyProperty.Register(
-        "PointSize", typeof(double), typeof(PointCloudView), new PropertyMetadata(1.0), v => (double)v > 0);
-
-    #endregion Dependency Properties
-
-    #region Dependency Property Changed Callbacks
-
-    private static void PointDataChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not PointCloudView pointCloudView)
-        {
-            return;
-        }
-
-        pointCloudView.UpdatePointGeometry();
-    }
-
-    private static void PointColorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
-    {
-        if (d is not PointCloudView pointCloudView)
-        {
-            return;
-        }
-
-        pointCloudView.UpdatePointColor();
-    }
-
-    #endregion Dependency Property Changed Callbacks
 
     private void UpdatePointGeometry()
     {
@@ -112,8 +44,10 @@ public partial class PointCloudView : UserControl
             return;
         }
 
-        PointGeometry.Positions = new(PointNormals.AsParallel().Select(pn => new Vector3(pn.x, pn.y, pn.z)));
+        PointGeometry.Positions = new(PointNormals.Select(pn => new Vector3(pn.x, pn.y, pn.z)));
+
         UpdatePointColor();
+        UpdateCameraTarget();
     }
 
     private void UpdatePointColor()
@@ -125,13 +59,12 @@ public partial class PointCloudView : UserControl
 
         if (PointColors?.Length == PointNormals.Length)
         {
-            Color4Collection colors = new(PointColors.AsParallel().Select(c => new Color4(c.X, c.Y, c.Z, 1.0f)));
-            PointGeometry.Colors = colors;
+            PointGeometry.Colors = new(PointColors);
             PointGeometryModel.Color = Colors.White;
         }
         else if (PointColor.HasValue)
         {
-            PointGeometry.Colors?.Clear();
+            PointGeometry.Colors = null;
             PointGeometryModel.Color = PointColor.Value;
         }
         else
@@ -139,5 +72,34 @@ public partial class PointCloudView : UserControl
             PointGeometry.Colors = null;
             PointGeometryModel.Color = Colors.White;
         }
+    }
+
+    private void UpdateCameraTarget()
+    {
+        Vector3D newTargetPoint;
+
+        if (!AutoCenterTargetPoint)
+        {
+            newTargetPoint = this.TargetPoint;
+        }
+        else if (this.PointNormals != null)
+        {
+            double zAvg = PointNormals.Where(pn => pn.z != 0).Average(pn => pn.z);
+            newTargetPoint = new Vector3D(0, 0, zAvg);
+        }
+        else
+        {
+            return;
+        }
+
+        Debug.WriteLine(newTargetPoint);
+
+        Vector3D lookDirection = new(0, 0, -CameraDistance);
+        Point3D position = (Point3D)(newTargetPoint - lookDirection);
+
+        DefaultCamera.LookDirection = lookDirection;
+        DefaultCamera.Position = position;
+
+        HelixViewPort.Reset();
     }
 }

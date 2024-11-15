@@ -16,6 +16,13 @@
                 <TextBlock Text="{Binding StatusText}" />
             </StatusBarItem>
         </StatusBar>
-        <controls:PointCloudView x:Name="PointCloudView" PointNormals="{Binding PointNormals}" PointColor="Gray" PointSize="0.8" />
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <controls:PointCloudView Grid.Column="0" PointNormals="{Binding PointNormals1}" PointColors="{Binding PointColors1}" PointColor="White" PointSize="0.5" />
+            <controls:PointCloudView Grid.Column="1" PointNormals="{Binding PointNormals2}" PointColor="#DDFFFFFF" PointSize="0.5" />
+        </Grid>
     </DockPanel>
 </Window>

@@ -23,73 +23,73 @@ namespace WpfCore;
 public partial class MainWindowViewModel : ObservableObject
 {
     [ObservableProperty]
-    private PointNormal[]? _pointNormals;
+    private PointNormal[]? _pointNormals1;
 
     [ObservableProperty]
-    private System.Windows.Media.Color _pointColor;
+    private PointNormal[]? _pointNormals2;
+
+    [ObservableProperty]
+    private Color4[]? _pointColors1;
 
     public MainWindowViewModel()
     {
         // PointGeometry = LoadPlyFile(@"Assets\scene_0000.ply");
-
-        var result = LoadCoPick3DFile("Assets/0012_IMG_Texture_8Bit.png");
-
-        PointNormals = result.Item1;
-        PointColor = System.Windows.Media.Colors.Red;
+        (PointNormals1, PointColors1) = LoadCoPick3DFile("Assets/0012_IMG_Texture_8Bit.png");
+        PointNormals2 = LoadCoPick3DFile("Assets/frame_0034_IMG_Texture_8Bit.png").Item1;
     }
 
-    //private static PointGeometry3D LoadPlyFile(string plyFilePath)
-    //{
-    //    using Stream f = File.OpenRead(plyFilePath);
-    //    using StreamReader sr = new StreamReader(f);
+    private static PointGeometry3D LoadPlyFile(string plyFilePath)
+    {
+        using Stream f = File.OpenRead(plyFilePath);
+        using StreamReader sr = new StreamReader(f);
 
-    //    int vertexCount = 0;
+        int vertexCount = 0;
 
-    //    string? line;
-    //    while ((line = sr.ReadLine()) != null)
-    //    {
-    //        if (line == "end_header")
-    //        {
-    //            break;
-    //        }
+        string? line;
+        while ((line = sr.ReadLine()) != null)
+        {
+            if (line == "end_header")
+            {
+                break;
+            }
 
-    //        if (line.StartsWith("element vertex"))
-    //        {
-    //            vertexCount = int.Parse(line[15..]);
-    //        }
-    //    }
+            if (line.StartsWith("element vertex"))
+            {
+                vertexCount = int.Parse(line[15..]);
+            }
+        }
 
-    //    var vertices = new SharpDX.Vector3[vertexCount];
-    //    var colors = new SharpDX.Color4[vertexCount];
+        var vertices = new SharpDX.Vector3[vertexCount];
+        var colors = new SharpDX.Color4[vertexCount];
 
-    //    int vertexIndex = 0;
-    //    while ((line = sr.ReadLine()) != null)
-    //    {
-    //        var parts = line.Split(' ').ToList();
+        int vertexIndex = 0;
+        while ((line = sr.ReadLine()) != null)
+        {
+            var parts = line.Split(' ').ToList();
 
-    //        if (parts.Count >= 3)
-    //        {
-    //            var coords = parts.Take(3).Select(float.Parse).ToList();
-    //            vertices[vertexIndex] = new SharpDX.Vector3(coords[0], coords[1], coords[2]);
-    //        }
+            if (parts.Count >= 3)
+            {
+                var coords = parts.Take(3).Select(float.Parse).ToList();
+                vertices[vertexIndex] = new SharpDX.Vector3(coords[0], coords[1], -coords[2]);
+            }
 
-    //        if (parts.Count >= 9)
-    //        {
-    //            var channels = parts[6..9].Select(int.Parse).ToList();
-    //            colors[vertexIndex] = new SharpDX.Color4(channels[0] / 255f, channels[1] / 255f, channels[2] / 255f, 1.0f);
-    //        }
+            if (parts.Count >= 9)
+            {
+                var channels = parts[6..9].Select(int.Parse).ToList();
+                colors[vertexIndex] = new SharpDX.Color4(channels[0] / 255f, channels[1] / 255f, channels[2] / 255f, 1.0f);
+            }
 
-    //        vertexIndex++;
-    //    }
+            vertexIndex++;
+        }
 
-    //    return new PointGeometry3D()
-    //    {
-    //        Positions = new Vector3Collection(vertices),
-    //        Colors = new Color4Collection(colors),
-    //    };
-    //}
+        return new PointGeometry3D()
+        {
+            Positions = new Vector3Collection(vertices),
+            Colors = new Color4Collection(colors),
+        };
+    }
 
-    private static (PointNormal[], Vector3[]) LoadCoPick3DFile(string filePath)
+    private static (PointNormal[], Color4[]) LoadCoPick3DFile(string filePath)
     {
         if (!File.Exists(filePath))
         {
@@ -121,14 +121,28 @@ public partial class MainWindowViewModel : ObservableObject
         float[] yData = ReadPointFileData(yFilePath);
         float[] zData = ReadPointFileData(zFilePath);
 
-        PointNormal[] pointNormals = new PointNormal[xData.Length];
+        var pointNormals = Enumerable.Zip(xData, yData, zData).Select(xyz => new PointNormal(xyz.First, -xyz.Second, -xyz.Third, 0, 0, 0)).ToArray();
 
-        for (int i = 0; i < xData.Length; i++)
-        {
-            pointNormals[i] = new PointNormal(xData[i], yData[i], zData[i], 0, 0, 0);
-        }
+        //int validPoints = zData.AsParallel().Count(p => p != 0);
 
-        return (pointNormals, null);
+        //PointNormal[] pointNormals = new PointNormal[validPoints];
+        //Color4[] validColors = new Color4[validPoints];
+
+        //int validIndex = 0;
+        //for (int i = 0; i < zData.Length; i++)
+        //{
+        //    if (zData[i] == 0)
+        //    {
+        //        continue;
+        //    }
+
+        //    pointNormals[validIndex] = new PointNormal(xData[i], -yData[i], -zData[i], 0, 0, 0);
+        //    validColors[validIndex] = colors[i];
+
+        //    validIndex++;
+        //}
+
+        return (pointNormals, colors);
     }
 
     private static float[] ReadPointFileData(string filePath)
@@ -164,11 +178,20 @@ public partial class MainWindowViewModel : ObservableObject
 
         using var frameDecode = decoder.GetFrame(0);
 
-        using FormatConverter converter = new(factory);
-        converter.Initialize(frameDecode, PixelFormat.Format128bppRGBAFloat);
+        byte[] data = new byte[frameDecode.Size.Width * frameDecode.Size.Height * 3];
+        frameDecode.CopyPixels(data, PixelFormat.GetStride(frameDecode.PixelFormat, frameDecode.Size.Width));
 
         Color4[] result = new Color4[frameDecode.Size.Width * frameDecode.Size.Height];
-        converter.CopyPixels(result);
+        Parallel.For(0, result.Length, i =>
+        {
+            result[i] = new Color4(data[i * 3 + 2] / 255f, data[i * 3 + 1] / 255f, data[i * 3] / 255f, 1.0f);
+        });
+
+        //using FormatConverter converter = new(factory);
+        //converter.Initialize(frameDecode, PixelFormat.Format128bppRGBAFloat);
+
+        //Color4[] result = new Color4[frameDecode.Size.Width * frameDecode.Size.Height];
+        //converter.CopyPixels(result);
 
         return result;
     }
