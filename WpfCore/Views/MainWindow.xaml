@@ -18,11 +18,6 @@
             </MenuItem>
         </Menu>
 
-        <StatusBar DockPanel.Dock="Bottom">
-            <StatusBarItem>
-                <TextBlock Text="{Binding StatusText}" />
-            </StatusBarItem>
-        </StatusBar>
         <controls:PointCloudView PointNormals="{Binding PointNormals1}" PointColors="{Binding PointColors1}" PointColor="White" PointSize="0.6" />
     </DockPanel>
 </Window>

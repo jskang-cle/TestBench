@@ -13,7 +13,6 @@ namespace WpfCore.Loader;
 
 public class PlyLoader : IModelLoader
 {
-
     public string Name { get; } = "PLY File";
 
     public string SupportedExtension { get; } = ".ply";
@@ -83,7 +82,7 @@ public class PlyLoader : IModelLoader
         return (vertices, colors);
     }
 
-    private PlyHeader ParsePlyHeader(TextReader tr)
+    private static PlyHeader ParsePlyHeader(TextReader tr)
     {
         var header = new PlyHeader();
         string? line;

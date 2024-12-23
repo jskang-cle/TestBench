@@ -33,7 +33,7 @@ public partial class MainWindowViewModel : ObservableObject
 
     public MainWindowViewModel()
     {
-
+        (PointNormals1, PointColors1) = ModelLoaderManager.LoadFile("assets/frame_0034_IMG_Texture_8Bit.png");
     }
 
     [RelayCommand]

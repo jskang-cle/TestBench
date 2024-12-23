@@ -33,7 +33,7 @@ public partial class PointCloudView : UserControl
     {
         InitializeComponent();
 
-        HelixViewPort.InputBindings.Add(new KeyBinding() { Command = ViewportCommands.Reset, Key = Key.R });
+        HelixViewPort.InputBindings.Add(new KeyBinding() { Command = ViewportCommandsRedirector.Reset, Key = Key.R });
     }
 
     private void UpdatePointGeometry()
